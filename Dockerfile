@@ -63,12 +63,14 @@ RUN printf '%s\n' '#!/usr/bin/env bash' 'exec node /clawdbot/dist/entry.js "$@"'
 
 COPY src ./src
 
+# The wrapper listens on this port.
+ENV CLAWDBOT_PUBLIC_PORT=8080
+
 # Install Tailscale
 RUN curl -fsSL https://tailscale.com/install.sh | sh
 
 COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
-
 ENV PORT=8080
 EXPOSE 8080 443
 CMD ["/app/start.sh"]
