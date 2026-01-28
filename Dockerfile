@@ -28,8 +28,8 @@ RUN git clone --depth 1 --branch "${CLAWDBOT_GIT_REF}" https://github.com/clawdb
 # Apply to all extension package.json files to handle workspace protocol (workspace:*).
 RUN set -eux; \
   find ./extensions -name 'package.json' -type f | while read -r f; do \
-    sed -i -E 's/"clawdbot"[[:space:]]*:[[:space:]]*">=[^"]+"/"clawdbot": "*"/g' "$f"; \
-    sed -i -E 's/"clawdbot"[[:space:]]*:[[:space:]]*"workspace:[^"]+"/"clawdbot": "*"/g' "$f"; \
+    sed -i -E 's/"clawdbot"[[:space:]]*:[[:space:]]*"[^"]+"/"clawdbot": "*"/g' "$f"; \
+    sed -i -E 's/"moltbot"[[:space:]]*:[[:space:]]*"[^"]+"/"moltbot": "*"/g' "$f"; \
   done
 
 RUN pnpm install --no-frozen-lockfile
@@ -45,6 +45,7 @@ ENV NODE_ENV=production
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates \
+    curl \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -64,6 +65,12 @@ COPY src ./src
 
 # The wrapper listens on this port.
 ENV CLAWDBOT_PUBLIC_PORT=8080
+
+# Install Tailscale
+RUN curl -fsSL https://tailscale.com/install.sh | sh
+
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 ENV PORT=8080
 EXPOSE 8080
-CMD ["node", "src/server.js"]
+CMD ["/app/start.sh"]
