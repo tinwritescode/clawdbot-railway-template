@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Start Tailscale daemon in background
-/usr/bin/tailscaled --tun=userspace-networking --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055 --state=/var/lib/tailscale/tailscaled.state &
+/usr/sbin/tailscaled --tun=userspace-networking --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055 --state=/var/lib/tailscale/tailscaled.state &
 
 # Wait a few seconds for daemon to start
 sleep 5
