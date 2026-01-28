@@ -11,7 +11,7 @@ sleep 5
 /usr/bin/tailscale up --authkey="${TS_AUTHKEY}" --hostname=clawdbot-railway --advertise-exit-node
 
 # Expose port 443 via Tailscale with HTTPS
-/usr/bin/tailscale serve --bg https:443 http://localhost:8080
+/usr/bin/tailscale serve --bg --https=443 http://localhost:8080
 
 # Start the main application
 
