@@ -10,6 +10,7 @@ RUN apt-get update \
     python3 \
     make \
     g++ \
+    golang \
   && rm -rf /var/lib/apt/lists/*
 
 # Install Bun (clawdbot build uses it)
@@ -46,6 +47,7 @@ RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
+    golang \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
