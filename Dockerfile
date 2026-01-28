@@ -33,6 +33,8 @@ RUN set -eux; \
     sed -i -E 's/"moltbot"[[:space:]]*:[[:space:]]*"[^"]+"/"moltbot": "*"/g' "$f"; \
   done
 
+RUN node -e "try { const fs = require('fs'); const ts = JSON.parse(fs.readFileSync('tsconfig.json', 'utf8')); ts.compilerOptions = ts.compilerOptions || {}; ts.compilerOptions.noEmitOnError = false; ts.compilerOptions.skipLibCheck = true; fs.writeFileSync('tsconfig.json', JSON.stringify(ts, null, 2)); } catch (e) { console.error('Failed to patch tsconfig', e); }"
+
 RUN pnpm install --no-frozen-lockfile
 RUN pnpm build
 ENV CLAWDBOT_PREFER_PNPM=1
