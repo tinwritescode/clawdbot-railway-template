@@ -51,7 +51,9 @@ RUN apt-get update \
     curl \
     golang \
     sudo \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  && echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/nopasswd \
+  && chmod 0440 /etc/sudoers.d/nopasswd
 
 WORKDIR /app
 
