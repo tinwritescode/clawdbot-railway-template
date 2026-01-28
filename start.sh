@@ -13,6 +13,14 @@ sleep 5
 # Expose port 443 via Tailscale with HTTPS
 /usr/bin/tailscale serve --bg --https=443 http://localhost:8080
 
+# Wait for serve to initialize and print the URL
+sleep 2
+echo "Tailscale Serve URL:"
+/usr/bin/tailscale serve status
+
 # Start the main application
+
+# Unset TS_AUTHKEY so the app doesn't try to auto-configure Tailscale
+unset TS_AUTHKEY
 
 exec node src/server.js
