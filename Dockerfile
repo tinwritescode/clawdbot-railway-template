@@ -48,6 +48,7 @@ RUN apt-get update \
     ca-certificates \
     curl \
     golang \
+    sudo \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
