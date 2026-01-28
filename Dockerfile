@@ -45,6 +45,7 @@ ENV NODE_ENV=production
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates \
+    curl \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -62,6 +63,12 @@ RUN printf '%s\n' '#!/usr/bin/env bash' 'exec node /clawdbot/dist/entry.js "$@"'
 
 COPY src ./src
 
+# Install Tailscale
+RUN curl -fsSL https://tailscale.com/install.sh | sh
+
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 ENV PORT=8080
 EXPOSE 8080
-CMD ["node", "src/server.js"]
+CMD ["/app/start.sh"]
