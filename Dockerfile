@@ -10,6 +10,7 @@ RUN apt-get update \
     python3 \
     make \
     g++ \
+    golang \
   && rm -rf /var/lib/apt/lists/*
 
 # Install Bun (openclaw build uses it)
@@ -30,7 +31,11 @@ RUN set -eux; \
   find ./extensions -name 'package.json' -type f | while read -r f; do \
     sed -i -E 's/"openclaw"[[:space:]]*:[[:space:]]*">=[^"]+"/"openclaw": "*"/g' "$f"; \
     sed -i -E 's/"openclaw"[[:space:]]*:[[:space:]]*"workspace:[^"]+"/"openclaw": "*"/g' "$f"; \
+    sed -i -E 's/"clawdbot"[[:space:]]*:[[:space:]]*"[^"]+"/"clawdbot": "*"/g' "$f"; \
+    sed -i -E 's/"moltbot"[[:space:]]*:[[:space:]]*"[^"]+"/"moltbot": "*"/g' "$f"; \
   done
+
+RUN node -e "try { const fs = require('fs'); const ts = JSON.parse(fs.readFileSync('tsconfig.json', 'utf8')); ts.compilerOptions = ts.compilerOptions || {}; ts.compilerOptions.noEmitOnError = false; ts.compilerOptions.skipLibCheck = true; fs.writeFileSync('tsconfig.json', JSON.stringify(ts, null, 2)); } catch (e) { console.error('Failed to patch tsconfig', e); }"
 
 RUN pnpm install --no-frozen-lockfile
 RUN pnpm build
@@ -45,7 +50,12 @@ ENV NODE_ENV=production
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+    curl \
+    golang \
+    sudo \
+  && rm -rf /var/lib/apt/lists/* \
+  && echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/nopasswd \
+  && chmod 0440 /etc/sudoers.d/nopasswd
 
 WORKDIR /app
 
@@ -64,6 +74,13 @@ COPY src ./src
 
 # The wrapper listens on this port.
 ENV OPENCLAW_PUBLIC_PORT=8080
+ENV CLAWDBOT_PUBLIC_PORT=8080
+
+# Install Tailscale
+RUN curl -fsSL https://tailscale.com/install.sh | sh
+
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 ENV PORT=8080
-EXPOSE 8080
-CMD ["node", "src/server.js"]
+EXPOSE 8080 443
+CMD ["/app/start.sh"]
