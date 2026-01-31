@@ -79,7 +79,7 @@ function configPath() {
   return (
     process.env.OPENCLAW_CONFIG_PATH?.trim() ||
     process.env.CLAWDBOT_CONFIG_PATH?.trim() ||
-    path.join(STATE_DIR, "moltbot.json")
+    path.join(STATE_DIR, "openclaw.json")
   );
 }
 
