@@ -1,7 +1,7 @@
-# Build clawdbot from source to avoid npm packaging gaps (some dist files are not shipped).
-FROM node:22-bookworm AS clawdbot-build
+# Build openclaw from source to avoid npm packaging gaps (some dist files are not shipped).
+FROM node:22-bookworm AS openclaw-build
 
-# Dependencies needed for clawdbot build
+# Dependencies needed for openclaw build
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     git \
@@ -13,22 +13,24 @@ RUN apt-get update \
     golang \
   && rm -rf /var/lib/apt/lists/*
 
-# Install Bun (clawdbot build uses it)
+# Install Bun (openclaw build uses it)
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:${PATH}"
 
 RUN corepack enable
 
-WORKDIR /clawdbot
+WORKDIR /openclaw
 
 # Pin to a known ref (tag/branch). If it doesn't exist, fall back to main.
-ARG CLAWDBOT_GIT_REF=main
-RUN git clone --depth 1 --branch "${CLAWDBOT_GIT_REF}" https://github.com/clawdbot/clawdbot.git .
+ARG OPENCLAW_GIT_REF=main
+RUN git clone --depth 1 --branch "${OPENCLAW_GIT_REF}" https://github.com/openclaw/openclaw.git .
 
 # Patch: relax version requirements for packages that may reference unpublished versions.
 # Apply to all extension package.json files to handle workspace protocol (workspace:*).
 RUN set -eux; \
   find ./extensions -name 'package.json' -type f | while read -r f; do \
+    sed -i -E 's/"openclaw"[[:space:]]*:[[:space:]]*">=[^"]+"/"openclaw": "*"/g' "$f"; \
+    sed -i -E 's/"openclaw"[[:space:]]*:[[:space:]]*"workspace:[^"]+"/"openclaw": "*"/g' "$f"; \
     sed -i -E 's/"clawdbot"[[:space:]]*:[[:space:]]*"[^"]+"/"clawdbot": "*"/g' "$f"; \
     sed -i -E 's/"moltbot"[[:space:]]*:[[:space:]]*"[^"]+"/"moltbot": "*"/g' "$f"; \
   done
@@ -37,7 +39,7 @@ RUN node -e "try { const fs = require('fs'); const ts = JSON.parse(fs.readFileSy
 
 RUN pnpm install --no-frozen-lockfile
 RUN pnpm build
-ENV CLAWDBOT_PREFER_PNPM=1
+ENV OPENCLAW_PREFER_PNPM=1
 RUN pnpm ui:install && pnpm ui:build
 
 
@@ -61,16 +63,17 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install --omit=dev && npm cache clean --force
 
-# Copy built clawdbot
-COPY --from=clawdbot-build /clawdbot /clawdbot
+# Copy built openclaw
+COPY --from=openclaw-build /openclaw /openclaw
 
-# Provide a clawdbot executable
-RUN printf '%s\n' '#!/usr/bin/env bash' 'exec node /clawdbot/dist/entry.js "$@"' > /usr/local/bin/clawdbot \
-  && chmod +x /usr/local/bin/clawdbot
+# Provide an openclaw executable
+RUN printf '%s\n' '#!/usr/bin/env bash' 'exec node /openclaw/dist/entry.js "$@"' > /usr/local/bin/openclaw \
+  && chmod +x /usr/local/bin/openclaw
 
 COPY src ./src
 
 # The wrapper listens on this port.
+ENV OPENCLAW_PUBLIC_PORT=8080
 ENV CLAWDBOT_PUBLIC_PORT=8080
 
 # Install Tailscale
